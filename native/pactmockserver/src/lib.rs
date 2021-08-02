@@ -1,5 +1,4 @@
 #[macro_use] extern crate rustler;
-#[macro_use] extern crate lazy_static;
 
 // Disabled for now, but still
 // wondering why rustler generated this in the first place
@@ -42,8 +41,8 @@ rustler_export_nifs! {
 }
 
 fn create_mock_server_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let pact_json: &str = try!(args[0].decode());
-    let port_arg: i32 = try!(args[1].decode());
+    let pact_json: &str = args[0].decode()?;
+    let port_arg: i32 = args[1].decode()?;
 
     match create_mock_server(pact_json, port_arg) {
         Ok(port) =>
@@ -56,12 +55,12 @@ fn create_mock_server_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Ter
 }
 
 fn mock_server_mismatches_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let port: i32 = try!(args[0].decode());
+    let port: i32 = args[0].decode()?;
     Ok((atoms::ok(), mock_server_mismatches(port)).encode(env))
 }
 
 fn mock_server_matched_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let port: i32 = try!(args[0].decode());
+    let port: i32 = args[0].decode()?;
 
     let matched: bool = mock_server_matched(port);
 
@@ -69,8 +68,8 @@ fn mock_server_matched_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Te
 }
 
 fn write_pact_file_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let port: i32 = try!(args[0].decode());
-    let dir_path: String = try!(args[1].decode());
+    let port: i32 = args[0].decode()?;
+    let dir_path: String = args[1].decode()?;
 
     match write_pact_file(port, Some(dir_path)) {
         Ok(_result) =>
@@ -83,7 +82,7 @@ fn write_pact_file_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'
 }
 
 fn cleanup_mock_server_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let port: i32 = try!(args[0].decode());
+    let port: i32 = args[0].decode()?;
 
     Ok((atoms::ok(), cleanup_mock_server_ffi(port)).encode(env))
 }
