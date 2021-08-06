@@ -47,10 +47,11 @@ defmodule PactElixir.ServiceProvider do
         "interactions": #{PactElixir.Interaction.to_json(provider.interactions)},
         "metadata": {
           "pactSpecification": {
-            "version": "2.0.0"
+            "version": "3.0.0"
           }
         }
       }
     """
+    |> tap(fn json -> IO.puts(json) end)
   end
 end

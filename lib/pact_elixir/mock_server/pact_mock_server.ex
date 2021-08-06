@@ -36,6 +36,11 @@ defmodule PactElixir.PactMockServer do
     GenServer.call(mock_server_pid, {:mismatches})
   end
 
+  def mismatches(name) when is_binary(name) do
+    # TODO: fails with seg fault when called with not used port
+    GenServer.call(registered_name(name), {:mismatches})
+  end
+
   @spec matched?(pid) :: list
   def matched?(mock_server_pid) when is_pid(mock_server_pid) do
     GenServer.call(mock_server_pid, {:matched})
