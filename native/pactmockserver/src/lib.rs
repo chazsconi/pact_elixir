@@ -14,7 +14,9 @@ use pact_mock_server::mock_server_mismatches;
 use pact_mock_server::mock_server_matched;
 use pact_mock_server::write_pact_file;
 use pact_mock_server::WritePactFileErr;
-use pact_mock_server::cleanup_mock_server_ffi;
+use pact_mock_server::shutdown_mock_server;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
 mod atoms {
     rustler_atoms! {
         atom ok;
@@ -42,15 +44,20 @@ rustler_export_nifs! {
 
 fn create_mock_server_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let pact_json: &str = args[0].decode()?;
-    let port_arg: i32 = args[1].decode()?;
+    let port_arg: u16 = args[1].decode()?;
 
-    match create_mock_server(pact_json, port_arg) {
+    let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port_arg);
+
+    match create_mock_server(pact_json, socket) {
         Ok(port) =>
             Ok((atoms::ok(), port).encode(env)),
-        Err(MockServerError::MockServerFailedToStart) =>
-            Ok((atoms::error(), atoms::mock_server_failed_to_start()).encode(env)),
-        Err(MockServerError::InvalidPactJson) =>
-            Ok((atoms::error(), atoms::invalid_pact_json()).encode(env))
+        Err(_) =>
+            Ok((atoms::error(), atoms::mock_server_failed_to_start()).encode(env))
+        // TODO: Handle errors
+        // Err(MockServerError::MockServerFailedToStart) =>
+        //     Ok((atoms::error(), atoms::mock_server_failed_to_start()).encode(env)),
+        // Err(MockServerError::InvalidPactJson) =>
+        //     Ok((atoms::error(), atoms::invalid_pact_json()).encode(env))
     }
 }
 
@@ -71,7 +78,7 @@ fn write_pact_file_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'
     let port: i32 = args[0].decode()?;
     let dir_path: String = args[1].decode()?;
 
-    match write_pact_file(port, Some(dir_path)) {
+    match write_pact_file(port, Some(dir_path), true) {
         Ok(_result) =>
             Ok((atoms::ok()).encode(env)),
         Err(WritePactFileErr::IOError) =>
@@ -84,6 +91,6 @@ fn write_pact_file_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'
 fn cleanup_mock_server_call<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let port: i32 = args[0].decode()?;
 
-    Ok((atoms::ok(), cleanup_mock_server_ffi(port)).encode(env))
+    Ok((atoms::ok(), shutdown_mock_server(port)).encode(env))
 }
 
